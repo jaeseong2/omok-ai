@@ -10,7 +10,7 @@ from .config import BOARD_SIZE
 
 class GameBoard(object):
     """
-    GameBoard for five-in-a-row
+    GameBoard for omok
     Contain enviroment information for game
 
     """
