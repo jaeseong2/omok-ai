@@ -1,6 +1,6 @@
 import click
 
-from game.board import GameBoard
+from game import Game
 from game.enum import GameMode, TurnStateEnum
 from agent.human import HumanAgent
 from agent.algorithm import AlgorithmAgent
@@ -21,8 +21,8 @@ def run(mode):
     else:
         black_agent = AlgorithmAgent(TurnStateEnum.BLACK)
         white_agent = AlgorithmAgent(TurnStateEnum.WHITE)
-    gameboard = GameBoard(black_agent, white_agent)
-    gameboard.start()
+    game = Game(black_agent, white_agent)
+    game.start()
 
 
 if __name__ == "__main__":
