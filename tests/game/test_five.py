@@ -2,7 +2,7 @@ import ast
 
 import pytest
 
-from game.board import GameBoard
+from game import Game
 from game.enum import GameMode, TurnStateEnum
 from game.exc import GameEndError
 from tests import TestAgent
@@ -15,7 +15,7 @@ def run_test(test_name, resource_manager, winner):
     white_agent = TestAgent(
         resource_manager.read_text(f"/test_five/white/{test_name}.txt")
     )
-    game_board = GameBoard(
+    game_board = Game(
         black_agent=black_agent,
         white_agent=white_agent,
     )

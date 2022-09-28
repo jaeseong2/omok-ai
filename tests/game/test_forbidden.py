@@ -1,6 +1,6 @@
 import ast
 
-from game.board import GameBoard
+from game import Game
 from game.enum import GameMode
 from tests import TestAgent
 
@@ -8,22 +8,22 @@ from tests import TestAgent
 def run_test(test_name, resource_manager):
     black_agent = TestAgent(
         resource_manager.read_text(
-            f"/test_unselectable/black/{test_name}.txt"
+            f"/test_forbidden/black/{test_name}.txt"
         )
     )
     white_agent = TestAgent(
         resource_manager.read_text(
-            f"/test_unselectable/white/{test_name}.txt"
+            f"/test_forbidden/white/{test_name}.txt"
         )
     )
-    game_board = GameBoard(
+    game = Game(
         black_agent=black_agent,
         white_agent=white_agent,
     )
-    game_board.start()
-    assert set(game_board.unselectable_points) == set(ast.literal_eval(
+    game.start()
+    assert set(game.forbidden_points) == set(ast.literal_eval(
         resource_manager.read_text(
-            f"/test_unselectable/unselectable/{test_name}.txt"
+            f"/test_forbidden/forbidden/{test_name}.txt"
         )
     ))
 
