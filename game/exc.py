@@ -1,4 +1,4 @@
-from .enum import TurnStateEnum
+from enums import TurnStateEnum
 
 class OutOfIndexError(Exception):
     def __init__(self):

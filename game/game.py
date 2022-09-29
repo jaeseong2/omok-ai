@@ -1,11 +1,11 @@
-from .enum import GameMode, PointStateEnum, TurnStateEnum, GameStateEnum
+from enums import GameMode, PointStateEnum, TurnStateEnum, GameStateEnum
 from .exc import (
     OutOfIndexError,
     CanNotSelectError,
     GameEndError,
     TestEndError,
 )
-from .config import BOARD_SIZE
+from config import BOARD_SIZE
 
 
 class Game(object):
@@ -86,8 +86,9 @@ class Game(object):
         '''
         count = 1
         for direction in directions:
+            _row, _col = row, col
             while True:
-                _row, _col = row + direction[0], col + direction[1]
+                _row, _col = _row + direction[0], _col + direction[1]
                 if self.is_out_of_board(_row, _col) or self.board[_row][_col] != state:
                     break
                 else:
@@ -117,7 +118,7 @@ class Game(object):
                 self.set_point_state(empty_row, empty_col, state)
                 if (
                     self.check_open_four(empty_row, empty_col, state, directions)
-                    and not self.check_forbidden_point(empty_row, empty_col, state)
+                    and not self.check_forbidden(empty_row, empty_col)
                 ):
                     self.set_point_state(empty_row, empty_col, PointStateEnum.EMPTY)
                     return True
@@ -132,7 +133,7 @@ class Game(object):
             empty_point = self.find_empty_point(row, col, state, direction)
             if empty_point:
                 empty_row, empty_col = empty_point
-                if self.check_five(empty_row, empty_col, state, direction):
+                if self.check_five(empty_row, empty_col, state, directions):
                     count += 1
         if count == 2:
             if self.get_state_count(row, col, state, directions) == 4:
@@ -152,14 +153,26 @@ class Game(object):
                     return True
         return False
 
-    def check_five(self, row, col, state, directions):
-        if self.get_state_count(self, row, col, state, directions) == 5:
-            return True
+    def check_five(self, row, col, state, directions=None):
+        if directions is None:
+            direction_sets = self.direction_sets
+        else:
+            direction_sets = [directions]
+
+        for directions in direction_sets:
+            if self.get_state_count(row, col, state, directions) == 5:
+                return True
         return False
 
-    def check_six(self, row, col, state, directions):
-        if self.get_state_count(self, row, col, state, directions) > 5:
-            return True
+    def check_six(self, row, col, state, directions=None):
+        if directions is None:
+            direction_sets = self.direction_sets
+        else:
+            direction_sets = [directions]
+
+        for directions in direction_sets:
+            if self.get_state_count(row, col, state, directions) > 5:
+                return True
         return False
 
     def check_double_three(self, row, col, state):
@@ -199,8 +212,8 @@ class Game(object):
         elif self.check_six(row, col, PointStateEnum.BLACK):
             return True
         elif (
-            self.double_three(row, col, PointStateEnum.BLACK)
-            or self.double_four(row, col, PointStateEnum.BLACK)
+            self.check_double_three(row, col, PointStateEnum.BLACK)
+            or self.check_double_four(row, col, PointStateEnum.BLACK)
         ):
             return True
         return False
@@ -215,8 +228,7 @@ class Game(object):
                     if self.check_forbidden(row, col):
                         self.board[row][col] = PointStateEnum.FORBIDDEN
                         self.forbidden_points.append((row, col))
-
-                if self.board[row][col] == PointStateEnum.FORBIDDEN:
+                elif self.board[row][col] == PointStateEnum.FORBIDDEN:
                     if not self.check_forbidden(row, col):
                         self.board[row][col] = PointStateEnum.EMPTY
                         self.forbidden_points.remove((row, col))
@@ -244,7 +256,9 @@ class Game(object):
                     row, col = move_function(self.board)
                     self.set_point_state(row, col, self.current_point_state)
                     self.empty_point_count -= 1
-                    self.check_finished(row, col)
+                    if self.check_finished(row, col):
+                        print('Finished')
+                        raise GameEndError
                     if self.current_turn == TurnStateEnum.BLACK:
                         self.set_forbidden_points(row, col)
                     else:
@@ -253,7 +267,6 @@ class Game(object):
                     self.change_turn()
 
             except KeyboardInterrupt:
-                print("Stop Game by keyboard interrupt")
                 break
             except TestEndError:
                 break
