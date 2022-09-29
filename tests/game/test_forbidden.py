@@ -1,7 +1,7 @@
 import ast
 
 from game import Game
-from game.enum import GameMode
+from enums import GameMode
 from tests import TestAgent
 
 
