@@ -10,11 +10,12 @@ class GameMode(enum.Enum):
 
 class PointStateEnum(enum.Enum):
     EMPTY = 0
-    UNSELECTABLE = 1
+    FORBIDDEN = 1
     BLACK = 2
     WHITE = 3
 
-    def get_opposite(self):
+    @property
+    def opposite(self):
         if self == self.BLACK:
             return self.WHITE
         elif self == self.WHITE:
@@ -36,7 +37,7 @@ class TurnStateEnum(enum.Enum):
             return self.BLACK
 
 
-class GamestateEnum(enum.Enum):
+class GameStateEnum(enum.Enum):
     CONTINUE = 0
     BLACK = 1
     WHITE = 2
