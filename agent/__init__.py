@@ -1,4 +1,4 @@
-from game.enum import TurnStateEnum
+from enums import TurnStateEnum
 
 class BaseAgent(object):
     """
