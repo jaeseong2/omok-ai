@@ -1,7 +1,7 @@
 import click
 
 from game import Game
-from game.enum import GameMode, TurnStateEnum
+from enums import GameMode, TurnStateEnum
 from agent.human import HumanAgent
 from agent.algorithm import AlgorithmAgent
 
