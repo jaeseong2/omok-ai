@@ -13,7 +13,3 @@ class CanNotSelectError(Exception):
 class TestEndError(Exception):
     pass
 
-
-class GameEndError(Exception):
-    def __init__(self, winner: TurnStateEnum = None):
-        self.winner = winner

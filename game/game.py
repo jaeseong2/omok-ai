@@ -6,6 +6,7 @@ from .exc import (
     TestEndError,
 )
 from config import BOARD_SIZE
+from agent import BaseAgent
 
 
 class Game(object):
@@ -15,7 +16,7 @@ class Game(object):
 
     """
 
-    def __init__(self, black_agent, white_agent):
+    def __init__(self, black_agent: BaseAgent, white_agent: BaseAgent):
         self.initialize()
         self.board_size = BOARD_SIZE
         self.black_agent = black_agent
@@ -29,8 +30,8 @@ class Game(object):
 
         try:
             self.move_functions = [
-                self.black_agent.get_next_point,
-                self.white_agent.get_next_point
+                self.black_agent.move,
+                self.white_agent.move
             ]
         except AttributeError:
             raise ValueError("Invalid agent")
@@ -59,7 +60,7 @@ class Game(object):
         self.forbidden_points = list()
         self.current_turn = TurnStateEnum.BLACK
         self.current_point_state = PointStateEnum.BLACK
-        self.game_state = GameStateEnum.CONTINUE
+        self.state = GameStateEnum.CONTINUE
         self.empty_point_count = BOARD_SIZE * BOARD_SIZE
 
     def change_turn(self):
@@ -236,16 +237,16 @@ class Game(object):
     def check_finished(self, row, col):
         if self.current_turn == TurnStateEnum.BLACK:
             if self.check_five(row, col, PointStateEnum.BLACK):
-                self.game_state = GameStateEnum.BLACK
+                self.state = GameStateEnum.BLACK
                 return True
             left = self.empty_point_count - len(self.forbidden_points)
         else:
             if self.check_five(row, col, PointStateEnum.WHITE):
-                self.game_state = GameStateEnum.WHITE
+                self.state = GameStateEnum.WHITE
                 return True
             left = self.empty_point_count
         if left == 0:
-            self.game_state = GameStateEnum.DRAW
+            self.state = GameStateEnum.DRAW
             return True
         return False
 
@@ -257,8 +258,7 @@ class Game(object):
                     self.set_point_state(row, col, self.current_point_state)
                     self.empty_point_count -= 1
                     if self.check_finished(row, col):
-                        print('Finished')
-                        raise GameEndError
+                        return
                     if self.current_turn == TurnStateEnum.BLACK:
                         self.set_forbidden_points(row, col)
                     else:
