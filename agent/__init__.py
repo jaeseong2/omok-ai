@@ -8,7 +8,7 @@ class BaseAgent(object):
     def __init__(self, turn: TurnStateEnum):
         self.turn = turn
 
-    def get_next_point(self):
+    def move(self):
         raise NotImplementedError(
-            "get_next_point() has to be implemented by subclasses"
+            "move() has to be implemented by subclasses"
         )
