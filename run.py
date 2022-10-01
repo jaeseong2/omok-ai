@@ -4,10 +4,12 @@ from game import Game
 from enums import GameMode, TurnStateEnum
 from agent.human import HumanAgent
 from agent.algorithm import AlgorithmAgent
+from board import Board
+
 
 @click.command()
 @click.option('--mode', default='HUMAN_HUMAN', help='')
-def run(mode):
+def run_game(mode):
     mode = GameMode(mode)
     if mode == GameMode.HUMAN_HUMAN:
         black_agent = HumanAgent(TurnStateEnum.BLACK)
@@ -21,9 +23,5 @@ def run(mode):
     else:
         black_agent = AlgorithmAgent(TurnStateEnum.BLACK)
         white_agent = AlgorithmAgent(TurnStateEnum.WHITE)
-    game = Game(black_agent, white_agent)
-    game.start()
-
-
-if __name__ == "__main__":
-    run()
+    board = Board(black_agent, white_agent)
+    board.start()
