@@ -2,11 +2,13 @@ import pygame
 import sys
 
 from game import Game
+from enums import GameMode
+from config import BOARD_SIZE
+from agent import BaseAgent
 
-import config
 
 class Board(object):
-    def __init__(self, game: Game):
+    def __init__(self, black_agent: BaseAgent, white_agent: BaseAgent):
         # size
         self.window_size = (700, 500)
         self.board_size = (500, 500)
@@ -32,35 +34,51 @@ class Board(object):
         )
         self.last_white_img = pygame.image.load('images/white_a.png')
         self.last_black_img = pygame.image.load('images/black_a.png')
-        self.board_img = pygame.image.load('images/board.png')
+        self.board_img = pygame.image.load('images/pygame.png')
 
         self.font = pygame.font.Font("freesansbold.ttf", 14)
-        self.game = game
         self.point_pixels = [
             [
-                (x * self.grid_size + 25, y * self.grid_size + 25)
-                for y in range(self.game.board_size)
-            ] for x in range(self.game.board_size)
+                (x * self.grid_size[0] + 25, y * self.grid_size[0] + 25)
+                for y in range(BOARD_SIZE)
+            ] for x in range(BOARD_SIZE)
         ]
         self.last_black_point = None
         self.last_white_point = None
 
+        # game and agents
+        self.black_agent = black_agent
+        self.white_agent = white_agent
+        self.game = Game(self.black_agent, self.white_agent)
+
     def draw_board(self):
         self.surface.blit(self.board_img, (0, 0))
 
-    def set_point(self, x, y, image):
-        img = [self.black_img, self.white_img, self.last_b_img, self.last_w_img]
-        self.surface.blit(img[img_index], (x, y))
+    def draw_image(self, x, y, image):
+        img = [self.black_img, self.white_img, self.last_black_img, self.last_white_img]
+        self.surface.blit(img[image], (x, y))
 
-    def set_number(self, x, y, stone, number):
-        colors = [white, black, red, red]
+    def draw_number(self, x, y, stone, number):
+        colors = [self.white, self.black, self.red]
         color = colors[stone]
         self.make_text(self.font, str(number), color, x + 15, y + 15, 'center')
 
+    def get_point(self, pos):
+        x = (pos[0] - 10) // 30
+        y = (pos[1] - 10) // 30
+        if x < 0 or y < 0 or x > 14 or y > 14:
+            return None
+        return x, y
+
+    def draw_stone(self, pos, color):
+        x, y = self.get_point(pos)
+        self.draw_image(x, y, color)
+        self.
+
     def set_menu(self):
         top, left = self.window_size[1] - 30, self.window_size[0] - 100
-        self.new_rect = self.make_text(self.font, 'New Game', self.blue, None, top - 30, left)
-        self.quit_rect = self.make_text(self.font, 'Quit Game', self.blue, None, top, left)
+        self.new_menu = self.make_text(self.font, 'New Game', self.blue, None, top - 30, left)
+        self.quit_menu = self.make_text(self.font, 'Quit Game', self.blue, None, top, left)
         # self.show_rect = self.make_text(self.font, 'Hide Number  ', self.blue, None, top - 60, left)
         # self.undo_rect = self.make_text(self.font, 'Undo', self.blue, None, top - 150, left)
         # self.uall_rect = self.make_text(self.font, 'Undo All', self.blue, None, top - 120, left)
@@ -96,22 +114,24 @@ class Board(object):
         pygame.quit()
         sys.exit()
 
-    def run(self):
+    def start(self):
         pygame.init()
         self.surface = pygame.display.set_mode(self.window_size)
         pygame.display.set_caption("Omok game")
         self.surface.fill(self.backgroud_color)
         self.draw_board()
 
+        fps_clock = pygame.time.Clock()
+
         while True:
             for event in pygame.event.get():
-                if event.type == QUIT:
-                    pygame.quit()
-                    sys.exit()
-                elif event.type == MOUSEBUTTONUP:
+                if event.type == pygame.QUIT:
+                    self.terminate()
+                elif event.type == pygame.MOUSEBUTTONUP:
                     pos = event.pos
-                    if pos
-                    elif self.new_rect.collidepoint(pos):
+                    if pos[0] >= 25 and pos[0] <= 475 and pos[1] >= 25 and pos[1] <= 475:
+                        self.
+                    elif self.new_menu.collidepoint(pos):
                         self.restart()
                     # elif self.show_rect.collidepoint(pos):
                     #     self.show_hide(omok)
@@ -121,9 +141,11 @@ class Board(object):
                     #     omok.undo_all()
                     # elif self.redo_rect.collidepoint(pos):
                     #     omok.redo()
-                    elif self.quit_rect.collidepoint(pos):
+                    elif self.quit_menu.collidepoint(pos):
                         self.terminate()
 
-        if omok.is_gameover:
-            return
+                pygame.display.update()
+                # fps_clock.tick(1)
+            if self.game.state !=:
+                return
 
