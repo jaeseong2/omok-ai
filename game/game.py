@@ -2,7 +2,6 @@ from enums import GameMode, PointStateEnum, TurnStateEnum, GameStateEnum
 from .exc import (
     OutOfIndexError,
     CanNotSelectError,
-    GameEndError,
     TestEndError,
 )
 from config import BOARD_SIZE
