@@ -3,8 +3,7 @@ import ast
 import pytest
 
 from game import Game
-from enums import GameMode, TurnStateEnum
-from game.exc import GameEndError
+from enums import TurnStateEnum, GameStateEnum
 from tests import TestAgent
 
 
@@ -15,12 +14,12 @@ def run_test(test_name, resource_manager, winner):
     white_agent = TestAgent(
         resource_manager.read_text(f"/test_five/white/{test_name}.txt")
     )
-    game_board = Game(
+    game = Game(
         black_agent=black_agent,
         white_agent=white_agent,
     )
-    with pytest.raises(GameEndError) as e:
-        game_board.start()
+    game.start()
+    assert game.state == GameStateEnum.BLACK
 
 
 def test_end_1(resource_manager):
