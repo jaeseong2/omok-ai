@@ -1,3 +1,5 @@
+from multiprocessing import Lock
+
 from enums import GameMode, PointStateEnum, TurnStateEnum, GameStateEnum
 from .exc import (
     OutOfIndexError,
@@ -5,7 +7,7 @@ from .exc import (
     TestEndError,
 )
 from config import BOARD_SIZE
-from agent import BaseAgent
+from agent import BaseAgent, HumanAgent
 
 
 class Game(object):
@@ -26,6 +28,7 @@ class Game(object):
             [(1, 1), (-1, -1)],
             [(1, -1), (-1, 1)],
         ]
+        self.lock = Lock()
 
         try:
             self.move_functions = [
@@ -61,6 +64,7 @@ class Game(object):
         self.current_point_state = PointStateEnum.BLACK
         self.state = GameStateEnum.CONTINUE
         self.empty_point_count = BOARD_SIZE * BOARD_SIZE
+        self.turn_ready = True
 
     def change_turn(self):
         if self.current_turn == TurnStateEnum.BLACK:
@@ -252,11 +256,22 @@ class Game(object):
     def start(self):
         while True:
             try:
-                for move_function in self.move_functions:
-                    row, col = move_function(self.board)
+                if (
+                    isinstance(self.black_agent, HumanAgent)
+                    or isinstance(self.white_agent, HumanAgent)
+                ):
+                    self.lock.acquire()
+                for agent in [self.black_agent, self.white_agent]:
+                    if isinstance(agent, HumanAgent):
+                        self.lock.release()
+                    row, col = agent.move_function(self.board)
+
+                    if isinstance(agent, HumanAgent):
+                        self.lock.acquire()
                     self.set_point_state(row, col, self.current_point_state)
                     self.empty_point_count -= 1
                     if self.check_finished(row, col):
+                        self.lock.release()
                         return
                     if self.current_turn == TurnStateEnum.BLACK:
                         self.set_forbidden_points(row, col)
