@@ -1,7 +1,7 @@
 from multiprocessing import Queue
 import time
 
-from agent import BaseAgent
+from agent.base import BaseAgent
 from enums import PointStateEnum, TurnStateEnum
 
 
