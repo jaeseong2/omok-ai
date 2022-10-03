@@ -9,7 +9,6 @@ from config import BOARD_SIZE
 from agent import BaseAgent, HumanAgent
 
 IMAGE_DIR = os.path.join(os.getcwd(), 'board/images/')
-os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 
 class Board(object):
@@ -86,21 +85,32 @@ class Board(object):
         self.surface.blit(self.board_img, (0, 0))
 
     def draw_image(self, x, y, image):
-        img = [self.black_img, self.white_img, self.last_black_img, self.last_white_img]
-        self.surface.blit(img[image], (x, y))
+        self.surface.blit(image, (x, y))
 
     def draw_number(self, x, y, color, number):
-        self.make_text(self.font, str(number), color, x + 15, y + 15, 'center')
+        self.make_text(self.font, str(number), color, None, x + 15, y + 15, 1)
 
     def get_point(self, pos):
-        x = (pos[0] - 10) // 30
-        y = (pos[1] - 10) // 30
-        if x < 0 or y < 0 or x > 14 or y > 14:
+        x = (pos[0] - 25) // 30
+        y = (pos[1] - 25) // 30
+        if (
+            (x < 0 or y < 0 or x > 14 or y > 14)
+            or (
+                pos[0] < x * 30 + 32
+                or pos[0] > x * 30 + 48
+                or pos[1] < y * 30 + 32
+                or pos[1] > y * 30 + 48
+            )
+            ):
             return None
         return x, y
 
     def draw_stone(self, pos):
-        x, y = self.get_point(pos)
+        point =  self.get_point(pos)
+        if point is None:
+            return False
+
+        x, y = point
         point_pixels = self.point_pixels[x][y]
         if self.game.current_turn == TurnStateEnum.BLACK:
             image = self.black_img
@@ -113,11 +123,13 @@ class Board(object):
             last_point = self.last_white_point
             self.last_white_point = point_pixels
 
-        self.draw_image(last_point[0], last_point[1], image)
-        self.draw_number(last_point[0], last_point[1], self.white, self.count)
+        if last_point is not None:
+            self.draw_image(last_point[0], last_point[1], image)
+            self.draw_number(last_point[0], last_point[1], self.white, self.count)
         self.count += 1
         self.draw_image(point_pixels[0], point_pixels[1], last_image)
         self.draw_number(point_pixels[0], point_pixels[1], self.red, self.count)
+        return True
 
     def set_menu(self):
         top, left = self.window_size[1] - 30, self.window_size[0] - 100
@@ -136,9 +148,9 @@ class Board(object):
         surf = font.render(text, False, color, bgcolor)
         rect = surf.get_rect()
         if position:
-            rect.center = (left, top)
+            rect.center = (top, left)
         else:    
-            rect.topleft = (left, top)
+            rect.topleft = (top, left)
         self.surface.blit(surf, rect)
         return rect
 
@@ -164,6 +176,7 @@ class Board(object):
         pygame.display.set_caption("Omok game")
         self.surface.fill(self.backgroud_color)
         self.draw_board()
+        self.set_menu()
         clock = pygame.time.Clock()
 
         while True:
@@ -179,13 +192,13 @@ class Board(object):
                         ):
                             self.target_agent.input_queue.put(pos)
                             self.game.lock.release()
-                            self.draw_stone(pos)
-
-                            self.game.lock.acquire()
-                            if self.game.state != GameStateEnum.CONTINUE:
-                                self.show_message(f'Game Finished : {self.game.state.value}')
-                            self.game.lock.release()
-                            self.change_agent()
+                            success = self.draw_stone(pos)
+                            if success:
+                                self.game.lock.acquire()
+                                if self.game.state != GameStateEnum.CONTINUE:
+                                    self.show_message(f'Game Finished : {self.game.state.value}')
+                                self.game.lock.release()
+                                self.change_agent()
                     elif self.new_menu.collidepoint(pos):
                         self.restart()
                     # elif self.show_rect.collidepoint(pos):
@@ -200,6 +213,6 @@ class Board(object):
                         self.terminate()
 
             pygame.display.update()
-            clock.tick(60)
+            clock.tick(10)
             
 
