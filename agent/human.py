@@ -1,19 +1,24 @@
-from agent import BaseAgent
-from game.exc import CanNotSelectError
-from enums import PointStateEnum
+from multiprocessing import Queue
+import time
+
+from agent.base import BaseAgent
+from enums import PointStateEnum, TurnStateEnum
+
 
 class HumanAgent(BaseAgent):
     """
     Agent for human
-    Get input from std
+    Get input from pygame
 
     """
-    def __init__(self, turn):
+    def __init__(self, turn: TurnStateEnum):
         super().__init__(turn)
+        self.input_queue = Queue()
 
-    def get_next_point(self, board):
-        row, col = input("Input(row, col): ").split()
-        row, col = int(row), int(col)
-        if board[row][col] == PointStateEnum.FORBIDDEN:
-            raise CanNotSelectError
+    def move(self, board):
+        row, col = self.input_queue.get()
+        if self.turn == TurnStateEnum.BLACK:
+            while board[row][col] == PointStateEnum.FORBIDDEN:
+                time.sleep(0.1)
+                row, col = self.input_queue.get()
         return (row, col)
