@@ -1,10 +1,15 @@
-import pygame
 import sys
+import os
+
+import pygame
 
 from game import Game
 from enums import GameMode, GameStateEnum, TurnStateEnum
 from config import BOARD_SIZE
 from agent import BaseAgent, HumanAgent
+
+IMAGE_DIR = os.path.join(os.getcwd(), 'board/images/')
+os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 
 class Board(object):
@@ -23,20 +28,26 @@ class Board(object):
         self.red = (255, 0, 0)
         self.green = (0, 200, 0)
 
+        pygame.init()
         # image
         self.white_img = pygame.transform.scale(
-            pygame.image.load('images/white.png'),
+            pygame.image.load(os.path.join(IMAGE_DIR, 'white.png')),
             self.grid_size
         )
         self.black_img = pygame.transform.scale(
-            pygame.image.load('images/black.png'),
+            pygame.image.load(os.path.join(IMAGE_DIR, 'black.png')),
             self.grid_size
         )
-        self.last_white_img = pygame.image.load('images/white_a.png')
-        self.last_black_img = pygame.image.load('images/black_a.png')
-        self.board_img = pygame.image.load('images/pygame.png')
-
-        self.font = pygame.font.Font("freesansbold.ttf", 14)
+        self.last_white_img = pygame.image.load(
+            os.path.join(IMAGE_DIR, 'white_a.png')
+        )
+        self.last_black_img = pygame.image.load(
+            os.path.join(IMAGE_DIR, 'black_a.png')
+        )
+        self.board_img = pygame.image.load(
+            os.path.join(IMAGE_DIR, 'board.png')
+        )
+        self.font = pygame.font.Font('freesansbold.ttf', 14)
         self.point_pixels = [
             [
                 (x * self.grid_size[0] + 25, y * self.grid_size[0] + 25)
@@ -149,12 +160,11 @@ class Board(object):
 
     def start(self):
         self.initialize()
-        pygame.init()
         self.surface = pygame.display.set_mode(self.window_size)
         pygame.display.set_caption("Omok game")
         self.surface.fill(self.backgroud_color)
         self.draw_board()
-        fps_clock = pygame.time.Clock()
+        clock = pygame.time.Clock()
 
         while True:
             for event in pygame.event.get():
@@ -190,6 +200,6 @@ class Board(object):
                         self.terminate()
 
             pygame.display.update()
-            fps_clock.tick(1)
+            clock.tick(60)
             
 
