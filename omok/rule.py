@@ -1,78 +1,30 @@
-from multiprocessing import Lock
-
-from enums import GameMode, PointStateEnum, TurnStateEnum, GameStateEnum
-from .exc import (
-    OutOfIndexError,
-    CanNotSelectError,
-    TestEndError,
-)
-from config import BOARD_SIZE
-from agent import BaseAgent, HumanAgent
+from omok.enums import GameMode, PointStateEnum, TurnStateEnum, GameStateEnum
+from omok.config import BOARD_SIZE
 
 
-class Game(object):
+class Rule(object):
     """
-    Game class for omok
-    Contain enviroment information for game
+    Rule class for omok
 
     """
-
-    def __init__(self, black_agent: BaseAgent, white_agent: BaseAgent):
+    def __init__(self):
         self.initialize()
-        self.board_size = BOARD_SIZE
-        self.black_agent = black_agent
-        self.white_agent = white_agent
         self.direction_sets = [
             [(1, 0), (-1, 0)],
             [(0, 1), (0, -1)],
             [(1, 1), (-1, -1)],
             [(1, -1), (-1, 1)],
         ]
-        self.lock = Lock()
-
-        try:
-            self.move_functions = [
-                self.black_agent.move,
-                self.white_agent.move
-            ]
-        except AttributeError:
-            raise ValueError("Invalid agent")
-
-    def __str__(self):
-        str_map = {
-            PointStateEnum.EMPTY: ".",
-            PointStateEnum.FORBIDDEN: "X",
-            PointStateEnum.BLACK: "B",
-            PointStateEnum.WHITE: "W",
-        }
-        return "\n".join([
-            " ".join([
-                str_map[point] for point in line
-            ]) for line in self.board
-        ])
 
     def initialize(self):
-        self.board = list()
+        self.array = list()
         for i in range(BOARD_SIZE):
             line = list()
             for j in range(BOARD_SIZE):
                 line.append(PointStateEnum.EMPTY)
-            self.board.append(line)
+            self.array.append(line)
 
         self.forbidden_points = list()
-        self.current_turn = TurnStateEnum.BLACK
-        self.current_point_state = PointStateEnum.BLACK
-        self.state = GameStateEnum.CONTINUE
-        self.empty_point_count = BOARD_SIZE * BOARD_SIZE
-        self.turn_ready = True
-
-    def change_turn(self):
-        if self.current_turn == TurnStateEnum.BLACK:
-            self.current_turn = TurnStateEnum.WHITE
-            self.current_point_state = PointStateEnum.WHITE
-        else:
-            self.current_turn = TurnStateEnum.BLACK
-            self.current_point_state = PointStateEnum.BLACK
 
     def is_out_of_board(self, row, col):
         return (
@@ -81,7 +33,7 @@ class Game(object):
         )
 
     def set_point_state(self, row, col, state: PointStateEnum):
-        self.board[row][col] = state
+        self.array[row][col] = state
 
     def get_state_count(self, row, col, state: PointStateEnum, directions):
         '''
@@ -93,7 +45,7 @@ class Game(object):
             _row, _col = row, col
             while True:
                 _row, _col = _row + direction[0], _col + direction[1]
-                if self.is_out_of_board(_row, _col) or self.board[_row][_col] != state:
+                if self.is_out_of_board(_row, _col) or self.array[_row][_col] != state:
                     break
                 else:
                     count += 1
@@ -105,9 +57,9 @@ class Game(object):
         '''
         while True:
             row, col = row + direction[0], col + direction[1]
-            if self.is_out_of_board(row, col) or self.board[row][col] == state.opposite:
+            if self.is_out_of_board(row, col) or self.array[row][col] == state.opposite:
                 return None
-            if self.board[row][col] == PointStateEnum.EMPTY:
+            if self.array[row][col] == PointStateEnum.EMPTY:
                 return row, col
 
     def check_open_three(self, row, col, state, directions):
@@ -211,6 +163,8 @@ class Game(object):
         return False
 
     def check_forbidden(self, row, col):
+        if self.array[row][col] != PointStateEnum.EMPTY:
+            return False
         if self.check_five(row, col, PointStateEnum.BLACK):
             return False
         elif self.check_six(row, col, PointStateEnum.BLACK):
@@ -226,61 +180,16 @@ class Game(object):
         start_row, end_row = max(0, row - 5), min(BOARD_SIZE, row + 5)
         start_col, end_col = max(0, col - 5), min(BOARD_SIZE, col + 5)
 
+        # remove
+        for row, col in self.forbidden_points:
+            if not self.check_forbidden(row, col):
+                self.array[row][col] = PointStateEnum.EMPTY
+                self.forbidden_points.remove((row, col))
+
+        # append new
         for row in range(start_row, end_row):
             for col in range(start_col, end_col):
-                if self.board[row][col] == PointStateEnum.EMPTY:
+                if self.array[row][col] == PointStateEnum.EMPTY:
                     if self.check_forbidden(row, col):
-                        self.board[row][col] = PointStateEnum.FORBIDDEN
+                        self.array[row][col] = PointStateEnum.FORBIDDEN
                         self.forbidden_points.append((row, col))
-                elif self.board[row][col] == PointStateEnum.FORBIDDEN:
-                    if not self.check_forbidden(row, col):
-                        self.board[row][col] = PointStateEnum.EMPTY
-                        self.forbidden_points.remove((row, col))
-
-    def check_finished(self, row, col):
-        if self.current_turn == TurnStateEnum.BLACK:
-            if self.check_five(row, col, PointStateEnum.BLACK):
-                self.state = GameStateEnum.BLACK
-                return True
-            left = self.empty_point_count - len(self.forbidden_points)
-        else:
-            if self.check_five(row, col, PointStateEnum.WHITE):
-                self.state = GameStateEnum.WHITE
-                return True
-            left = self.empty_point_count
-        if left == 0:
-            self.state = GameStateEnum.DRAW
-            return True
-        return False
-
-    def start(self):
-        while True:
-            try:
-                if (
-                    isinstance(self.black_agent, HumanAgent)
-                    or isinstance(self.white_agent, HumanAgent)
-                ):
-                    self.lock.acquire()
-                for agent in [self.black_agent, self.white_agent]:
-                    if isinstance(agent, HumanAgent):
-                        self.lock.release()
-                    row, col = agent.move_function(self.board)
-
-                    if isinstance(agent, HumanAgent):
-                        self.lock.acquire()
-                    self.set_point_state(row, col, self.current_point_state)
-                    self.empty_point_count -= 1
-                    if self.check_finished(row, col):
-                        self.lock.release()
-                        return
-                    if self.current_turn == TurnStateEnum.BLACK:
-                        self.set_forbidden_points(row, col)
-                    else:
-                        if self.board[row][col] == PointStateEnum.FORBIDDEN:
-                            self.forbidden_points.remove((row, col))
-                    self.change_turn()
-
-            except KeyboardInterrupt:
-                break
-            except TestEndError:
-                break

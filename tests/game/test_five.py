@@ -3,7 +3,7 @@ import ast
 import pytest
 
 from game import Game
-from enums import TurnStateEnum, GameStateEnum
+from omok.enums import TurnStateEnum, GameStateEnum
 from tests import TestAgent
 
 

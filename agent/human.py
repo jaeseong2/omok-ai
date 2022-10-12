@@ -2,7 +2,7 @@ from multiprocessing import Queue
 import time
 
 from agent.base import BaseAgent
-from enums import PointStateEnum, TurnStateEnum
+from omok.enums import PointStateEnum, TurnStateEnum
 
 
 class HumanAgent(BaseAgent):

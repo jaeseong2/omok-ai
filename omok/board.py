@@ -4,11 +4,11 @@ import os
 import pygame
 
 from game import Game
-from enums import GameMode, GameStateEnum, TurnStateEnum
-from config import BOARD_SIZE
+from omok.enums import GameMode, GameStateEnum, TurnStateEnum
+from omok.config import BOARD_SIZE
 from agent import BaseAgent, HumanAgent
 
-IMAGE_DIR = os.path.join(os.getcwd(), 'board/images/')
+IMAGE_DIR = os.path.join(os.getcwd(), 'resources/images/')
 
 
 class Board(object):

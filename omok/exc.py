@@ -1,4 +1,4 @@
-from enums import TurnStateEnum
+from omok.enums import TurnStateEnum
 
 class OutOfIndexError(Exception):
     def __init__(self):

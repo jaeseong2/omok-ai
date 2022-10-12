@@ -1,4 +1,4 @@
-from enums import TurnStateEnum
+from omok.enums import TurnStateEnum
 
 class BaseAgent(object):
     """

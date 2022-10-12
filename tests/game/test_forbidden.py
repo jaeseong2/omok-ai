@@ -1,7 +1,7 @@
 import ast
 
 from game import Game
-from enums import GameMode
+from omok.enums import GameMode
 from tests import TestAgent
 
 
