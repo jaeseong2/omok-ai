@@ -63,12 +63,6 @@ class Game(object):
             self.current_turn = TurnStateEnum.BLACK
             self.current_point_state = PointStateEnum.BLACK
 
-    def is_out_of_board(self, row, col):
-        return (
-            row < 0 or BOARD_SIZE - 1 < row
-            or col < 0 or BOARD_SIZE - 1 < col
-        )
-
     def check_game_state(self, row, col):
         if self.current_turn == TurnStateEnum.BLACK:
             if self.rule.check_five(row, col, PointStateEnum.BLACK):
@@ -105,12 +99,9 @@ class Game(object):
                     if self.check_game_state(row, col):
                         self.lock.release()
                         return
+                    self.change_turn()
                     if self.current_turn == TurnStateEnum.BLACK:
                         self.rule.set_forbidden_points(row, col)
-                    else:
-                        if self.rule.array[row][col] == PointStateEnum.FORBIDDEN:
-                            self.rule.forbidden_points.remove((row, col))
-                    self.change_turn()
 
             except KeyboardInterrupt:
                 break
