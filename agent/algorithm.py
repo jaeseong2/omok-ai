@@ -1,5 +1,5 @@
 from agent.base import BaseAgent
-from enums import PointStateEnum, TurnStateEnum
+from omok.enums import PointStateEnum, TurnStateEnum
 
 
 class AlgorithmAgent(object):

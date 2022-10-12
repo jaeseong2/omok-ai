@@ -1,10 +1,10 @@
 import click
 
-from game import Game
-from enums import GameMode, TurnStateEnum
+from omok.game import Game
+from omok.enums import GameMode, TurnStateEnum
 from agent.human import HumanAgent
 from agent.algorithm import AlgorithmAgent
-from board import Board
+from omok.board import Board
 
 
 @click.command()
