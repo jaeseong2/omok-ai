@@ -15,14 +15,14 @@ class PointStateEnum(enum.Enum):
     WHITE = 3
 
     @property
-    def opposite(self):
+    def opponent(self):
         if self == self.BLACK:
             return self.WHITE
         elif self == self.WHITE:
             return self.BLACK
         else:
             raise ValueError(
-                f'{self.value} has no opposite'
+                f'{self.value} has no opponent'
             )
 
 
@@ -38,7 +38,7 @@ class TurnStateEnum(enum.Enum):
             return PointStateEnum.WHITE
 
     @property
-    def opposite(self):
+    def opponent(self):
         if self == self.BLACK:
             return self.WHITE
         else:
