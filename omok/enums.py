@@ -30,7 +30,15 @@ class TurnStateEnum(enum.Enum):
     BLACK = 0
     WHITE = 1
 
-    def get_opposite(self):
+    @property
+    def point(self):
+        if self == self.BLACK:
+            return PointStateEnum.BLACK
+        else:
+            return PointStateEnum.WHITE
+
+    @property
+    def opposite(self):
         if self == self.BLACK:
             return self.WHITE
         else:
