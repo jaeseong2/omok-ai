@@ -69,13 +69,10 @@ class Rule(object):
         '''
         for direction in directions:
             empty_point = self.find_empty_point(row, col, state, direction)
-            if empty_point:
+            if empty_point and empty_point not in self.forbidden_points:
                 empty_row, empty_col = empty_point
                 self.set_point_state(empty_row, empty_col, state)
-                if (
-                    self.check_open_four(empty_row, empty_col, state, directions)
-                    and not self.check_forbidden(empty_row, empty_col)
-                ):
+                if self.check_open_four(empty_row, empty_col, state, directions):
                     self.set_point_state(empty_row, empty_col, PointStateEnum.EMPTY)
                     return True
                 self.set_point_state(empty_row, empty_col, PointStateEnum.EMPTY)
@@ -136,11 +133,12 @@ class Rule(object):
         Check given point is double three point in all directions
         '''
         count = 0
+        previous_state = self.array[row][col]
         self.set_point_state(row, col, state)
         for directions in self.direction_sets:
             if self.check_open_three(row, col, state, directions):
                 count += 1
-        self.set_point_state(row, col, PointStateEnum.EMPTY)
+        self.set_point_state(row, col, previous_state)
         if count >= 2:
             return True
         return False
@@ -151,13 +149,14 @@ class Rule(object):
         
         '''
         count = 0
+        previous_state = self.array[row][col]
         self.set_point_state(row, col, state)
         for directions in self.direction_sets:
             if self.check_open_four(row, col, state, directions) == 2:
                 count += 2
             elif self.check_four(row, col, state, directions):
                 count += 1
-        self.set_point_state(row, col, PointStateEnum.EMPTY)
+        self.set_point_state(row, col, previous_state)
         if count >= 2:
             return True
         return False

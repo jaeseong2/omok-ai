@@ -24,7 +24,7 @@ class Game(object):
         self.black_agent = black_agent
         self.white_agent = white_agent
         self.lock = Lock()
-        self.rule = Rule()
+        self.rule: Rule = Rule()
 
         try:
             self.move_functions = [
@@ -70,7 +70,10 @@ class Game(object):
                 return True
             left = self.empty_point_count - len(self.forbidden_points)
         else:
-            if self.rule.check_five(row, col, PointStateEnum.WHITE):
+            if (
+                self.rule.check_five(row, col, PointStateEnum.WHITE)
+                or self.rule.check_six(row, col, PointStateEnum.WHITE)
+            ):
                 self.state = GameStateEnum.WHITE
                 return True
             left = self.empty_point_count
@@ -94,7 +97,7 @@ class Game(object):
 
                     if isinstance(agent, HumanAgent):
                         self.lock.acquire()
-                    self.set_point_state(row, col, self.current_point_state)
+                    self.rule.set_point_state(row, col, self.current_point_state)
                     self.empty_point_count -= 1
                     if self.check_game_state(row, col):
                         self.lock.release()
