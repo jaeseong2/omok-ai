@@ -1,7 +1,8 @@
 import ast
 
+from omok.enums import TurnStateEnum
 from agent import BaseAgent
-from omok.exc import TestEndError
+from tests.exc import TestEndError
 
 
 class TestAgent(BaseAgent):
@@ -9,7 +10,7 @@ class TestAgent(BaseAgent):
     Agent for test
 
     """
-    def __init__(self, resource: str):
+    def __init__(self, turn: TurnStateEnum, resource: str):
         self.points = ast.literal_eval(resource)
         self.index = 0
 

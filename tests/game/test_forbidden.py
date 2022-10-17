@@ -1,18 +1,21 @@
 import ast
 
 from omok.game import Game
-from omok.enums import GameMode
+from omok.enums import TurnStateEnum
 from tests import TestAgent
+from tests.exc import TestEndError
 
 
 def run_test(test_name, resource_manager):
     black_agent = TestAgent(
         resource_manager.read_text(
+            TurnStateEnum.BLACK,
             f"/test_forbidden/black/{test_name}.txt"
         )
     )
     white_agent = TestAgent(
         resource_manager.read_text(
+            TurnStateEnum.WHITE,
             f"/test_forbidden/white/{test_name}.txt"
         )
     )
@@ -20,7 +23,10 @@ def run_test(test_name, resource_manager):
         black_agent=black_agent,
         white_agent=white_agent,
     )
-    game.start()
+    try:
+        game.start()
+    except TestEndError:
+        pass
     assert set(game.rule.forbidden_points) == set(ast.literal_eval(
         resource_manager.read_text(
             f"/test_forbidden/forbidden/{test_name}.txt"

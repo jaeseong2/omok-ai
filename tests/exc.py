@@ -1,0 +1,2 @@
+class TestEndError(Exception):
+    pass
