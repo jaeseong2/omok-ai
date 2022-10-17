@@ -1,7 +1,7 @@
 import ast
 
 from agent import BaseAgent
-from game.exc import TestEndError
+from omok.exc import TestEndError
 
 
 class TestAgent(BaseAgent):

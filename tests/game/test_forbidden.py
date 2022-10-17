@@ -1,6 +1,6 @@
 import ast
 
-from game import Game
+from omok.game import Game
 from omok.enums import GameMode
 from tests import TestAgent
 
@@ -21,7 +21,7 @@ def run_test(test_name, resource_manager):
         white_agent=white_agent,
     )
     game.start()
-    assert set(game.forbidden_points) == set(ast.literal_eval(
+    assert set(game.rule.forbidden_points) == set(ast.literal_eval(
         resource_manager.read_text(
             f"/test_forbidden/forbidden/{test_name}.txt"
         )
