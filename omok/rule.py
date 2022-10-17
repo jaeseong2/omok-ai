@@ -51,15 +51,44 @@ class Rule(object):
                     count += 1
         return count
 
+    def get_row_state(self, row, col, state, directions):
+        points = [(row, col)]
+        blank_count = 0
+        for direction in directions:
+            _row, _col = row, col
+            while True:
+                _row, _col = _row + direction[0], _col + direction[1]
+                if self.is_out_of_board(_row, _col):
+                    break
+                if self.array[_row][_col] == state:
+                    points.append((_row, _col))
+                elif self.array[_row][_col] == PointStateEnum.EMPTY:
+                    if blank_count + len(points) > 5:
+                        break
+                    blank_count += 1
+                else:
+                    break
+        return points, blank_count
+
+    def get_direction_points_map(self, row, col, state, direction_sets = None):
+        direction_points_dict = {}
+        if direction_sets is None:
+            direction_sets = self.direction_sets
+        for i, directions in enumerate(direction_sets):
+            points = self.get_row_state(row, col, state, directions)
+            if len(points) > 1:
+                direction_points_dict[i] = points
+        return direction_points_dict
+
     def find_empty_point(self, row, col, state: PointStateEnum, direction):
         '''
         Find empty point at end of line
         '''
         while True:
             row, col = row + direction[0], col + direction[1]
-            if self.is_out_of_board(row, col) or self.array[row][col] == state.opposite:
+            if self.is_out_of_board(row, col) or self.array[row][col] == state.opponent:
                 return None
-            if self.array[row][col] == PointStateEnum.EMPTY:
+            if self.array[row][col] in [PointStateEnum.EMPTY, PointStateEnum.FORBIDDEN]:
                 return row, col
 
     def check_open_three(self, row, col, state, directions):
@@ -69,16 +98,19 @@ class Rule(object):
         '''
         for direction in directions:
             empty_point = self.find_empty_point(row, col, state, direction)
-            if empty_point and empty_point not in self.forbidden_points:
+            if empty_point:
                 empty_row, empty_col = empty_point
+                previous_state = self.array[empty_row][empty_col]
                 self.set_point_state(empty_row, empty_col, state)
-                if self.check_open_four(empty_row, empty_col, state, directions):
-                    self.set_point_state(empty_row, empty_col, PointStateEnum.EMPTY)
+                if self.check_open_four(empty_row, empty_col, state, directions, True):
+                    if row == 7 and col == 10:
+                        print(empty_row, empty_col)
+                    self.set_point_state(empty_row, empty_col, previous_state)
                     return True
-                self.set_point_state(empty_row, empty_col, PointStateEnum.EMPTY)
+                self.set_point_state(empty_row, empty_col, previous_state)
         return False
 
-    def check_open_four(self, row, col, state, directions):
+    def check_open_four(self, row, col, state, directions, seq=False):
         if self.check_five(row, col, state):
             return False
         count = 0
@@ -91,6 +123,9 @@ class Rule(object):
         if count == 2:
             if self.get_state_count(row, col, state, directions) == 4:
                 count = 1
+            else:
+                if seq:
+                    count = 0
         else:
             count = 0
         return count
@@ -162,7 +197,7 @@ class Rule(object):
         return False
 
     def check_forbidden(self, row, col):
-        if self.array[row][col] != PointStateEnum.EMPTY:
+        if self.array[row][col] in [PointStateEnum.BLACK, PointStateEnum.WHITE]:
             return False
         if self.check_five(row, col, PointStateEnum.BLACK):
             return False
