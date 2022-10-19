@@ -8,16 +8,12 @@ from tests.exc import TestEndError
 
 def run_test(test_name, resource_manager):
     black_agent = TestAgent(
-        resource_manager.read_text(
-            TurnStateEnum.BLACK,
-            f"/test_forbidden/black/{test_name}.txt"
-        )
+        TurnStateEnum.BLACK,
+        resource_manager.read_text(f"/test_forbidden/black/{test_name}.txt")
     )
     white_agent = TestAgent(
-        resource_manager.read_text(
-            TurnStateEnum.WHITE,
-            f"/test_forbidden/white/{test_name}.txt"
-        )
+        TurnStateEnum.WHITE,
+        resource_manager.read_text(f"/test_forbidden/white/{test_name}.txt")
     )
     game = Game(
         black_agent=black_agent,
@@ -58,6 +54,14 @@ def test_double_three_6(resource_manager):
     run_test("double_three_6", resource_manager)
 
 
+def test_double_three_7(resource_manager):
+    run_test("double_three_7", resource_manager)
+
+
+def test_double_three_8(resource_manager):
+    run_test("double_three_8", resource_manager)
+
+
 def test_double_four_1(resource_manager):
     run_test("double_four_1", resource_manager)
 
@@ -72,3 +76,11 @@ def test_double_four_3(resource_manager):
 
 def test_double_four_4(resource_manager):
     run_test("double_four_4", resource_manager)
+
+
+def test_double_four_5(resource_manager):
+    run_test("double_four_5", resource_manager)
+
+
+def test_double_four_6(resource_manager):
+    run_test("double_four_6", resource_manager)
