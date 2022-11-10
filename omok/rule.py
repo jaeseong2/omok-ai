@@ -51,16 +51,109 @@ class Rule(object):
                     count += 1
         return count
 
+    def get_direction_state_counts(self, row, col, state, direction):
+        # points = [(row, col)]
+        counts = [0, 0, 0, 0] # adj black, off black, internal blank, external blank
+        total_count = 0
+        while True:
+            row, col = row + direction[0], col + direction[1]
+            if self.is_out_of_board(row, col):
+                break
+            if self.array[row][col] == state.opponent:
+                break
+            if self.array[row][col] == state:
+                # points.append((row, col))
+                if counts[3] != 0:
+                    if counts[2] != 0:
+                        break
+                    counts[2], counts[3] = counts[3], counts[2]
+                    counts[0], counts[1] = counts[1], counts[0]
+                counts[1] += 1
+            else:
+                if (
+                    self.array[row][col] == PointStateEnum.FORBIDDEN
+                    and state == PointStateEnum.BLACK
+                ):
+                    break
+                if (
+                    self.array[row][col] == PointStateEnum.EMPTY
+                    and total_count >= 4
+                ):
+                    break
+                counts[3] += 1
+            total_count += 1
+        if counts[1] and not counts[2]:
+            counts[0], counts[1] = counts[1], counts[0]
+        return counts
+
+    def get_direction_type_dict(self, row, col, state, direction_sets=None):
+        direction_type_dict = {}
+        if direction_sets is None:
+            direction_sets = self.direction_sets
+        for directions in direction_sets:
+            current_counts_dict = {}
+            for direction in directions:
+                counts = self.get_direction_state_counts(row, col, state, direction)
+                current_counts_dict[direction] = counts
+            row_type = self.get_row_type(current_counts_dict)
+            direction_type_dict[directions[0]] = row_type
+        return direction_type_dict
+
+    def get_row_type(self, counts_dict):
+        first_counts, second_counts = list(counts_dict.values())
+        internal_sum = first_counts[0] + second_counts[0]
+        external_sum = first_counts[1] + second_counts[1]
+        internal_blank_sum = first_counts[2] + second_counts[2]
+        external_blank_sum = first_counts[3] + second_counts[3]
+
+        if internal_sum >= 5:
+            return 'six'
+        if internal_sum == 4:
+            if first_counts[2] != 1 and second_counts[2] != 1:
+                return 'five'
+            return 'six'
+        if internal_sum == 3:
+            if first_counts[2] != 1 and second_counts[2] != 1:
+                pass
+
+        if internal_sum == 2:
+            if internal_blank_sum == 4:
+                pass
+            else:
+                pass
+        if internal_sum == 1:
+            pass
+
+        if internal_sum == 0:
+            pass
+
     def find_empty_point(self, row, col, state: PointStateEnum, direction):
         '''
         Find empty point at end of line
         '''
         while True:
             row, col = row + direction[0], col + direction[1]
-            if self.is_out_of_board(row, col) or self.array[row][col] == state.opposite:
+            if self.is_out_of_board(row, col) or self.array[row][col] == state.opponent:
                 return None
-            if self.array[row][col] == PointStateEnum.EMPTY:
+            if self.array[row][col] in [PointStateEnum.EMPTY, PointStateEnum.FORBIDDEN]:
                 return row, col
+
+    def check_three(self, row, col, state, directions):
+        '''
+        Find empty point and set the point as target state
+        Then check the line is open four or not
+        '''
+        for direction in directions:
+            empty_point = self.find_empty_point(row, col, state, direction)
+            if empty_point:
+                empty_row, empty_col = empty_point
+                previous_state = self.array[empty_row][empty_col]
+                self.set_point_state(empty_row, empty_col, state)
+                if self.check_four(empty_row, empty_col, state, directions):
+                    self.set_point_state(empty_row, empty_col, previous_state)
+                    return True
+                self.set_point_state(empty_row, empty_col, previous_state)
+        return False
 
     def check_open_three(self, row, col, state, directions):
         '''
@@ -71,17 +164,15 @@ class Rule(object):
             empty_point = self.find_empty_point(row, col, state, direction)
             if empty_point:
                 empty_row, empty_col = empty_point
+                previous_state = self.array[empty_row][empty_col]
                 self.set_point_state(empty_row, empty_col, state)
-                if (
-                    self.check_open_four(empty_row, empty_col, state, directions)
-                    and not self.check_forbidden(empty_row, empty_col)
-                ):
-                    self.set_point_state(empty_row, empty_col, PointStateEnum.EMPTY)
+                if self.check_open_four(empty_row, empty_col, state, directions, True):
+                    self.set_point_state(empty_row, empty_col, previous_state)
                     return True
-                self.set_point_state(empty_row, empty_col, PointStateEnum.EMPTY)
+                self.set_point_state(empty_row, empty_col, previous_state)
         return False
 
-    def check_open_four(self, row, col, state, directions):
+    def check_open_four(self, row, col, state, directions, seq=False):
         if self.check_five(row, col, state):
             return False
         count = 0
@@ -94,6 +185,9 @@ class Rule(object):
         if count == 2:
             if self.get_state_count(row, col, state, directions) == 4:
                 count = 1
+            else:
+                if seq:
+                    count = 0
         else:
             count = 0
         return count
@@ -136,11 +230,12 @@ class Rule(object):
         Check given point is double three point in all directions
         '''
         count = 0
+        previous_state = self.array[row][col]
         self.set_point_state(row, col, state)
         for directions in self.direction_sets:
             if self.check_open_three(row, col, state, directions):
                 count += 1
-        self.set_point_state(row, col, PointStateEnum.EMPTY)
+        self.set_point_state(row, col, previous_state)
         if count >= 2:
             return True
         return False
@@ -151,19 +246,20 @@ class Rule(object):
         
         '''
         count = 0
+        previous_state = self.array[row][col]
         self.set_point_state(row, col, state)
         for directions in self.direction_sets:
             if self.check_open_four(row, col, state, directions) == 2:
                 count += 2
             elif self.check_four(row, col, state, directions):
                 count += 1
-        self.set_point_state(row, col, PointStateEnum.EMPTY)
+        self.set_point_state(row, col, previous_state)
         if count >= 2:
             return True
         return False
 
     def check_forbidden(self, row, col):
-        if self.array[row][col] != PointStateEnum.EMPTY:
+        if self.array[row][col] in [PointStateEnum.BLACK, PointStateEnum.WHITE]:
             return False
         if self.check_five(row, col, PointStateEnum.BLACK):
             return False
@@ -177,8 +273,8 @@ class Rule(object):
         return False
 
     def set_forbidden_points(self, row, col):
-        start_row, end_row = max(0, row - 5), min(BOARD_SIZE, row + 5)
-        start_col, end_col = max(0, col - 5), min(BOARD_SIZE, col + 5)
+        start_row, end_row = max(0, row - 6), min(BOARD_SIZE, row + 6)
+        start_col, end_col = max(0, col - 6), min(BOARD_SIZE, col + 6)
 
         # remove
         for row, col in self.forbidden_points:

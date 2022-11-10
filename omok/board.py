@@ -105,11 +105,7 @@ class Board(object):
             return None
         return x, y
 
-    def draw_stone(self, pos):
-        point =  self.get_point(pos)
-        if point is None:
-            return False
-
+    def draw_stone(self, point):
         x, y = point
         point_pixels = self.point_pixels[x][y]
         if self.game.current_turn == TurnStateEnum.BLACK:
@@ -129,7 +125,6 @@ class Board(object):
         self.count += 1
         self.draw_image(point_pixels[0], point_pixels[1], last_image)
         self.draw_number(point_pixels[0], point_pixels[1], self.red, self.count)
-        return True
 
     def set_menu(self):
         top, left = self.window_size[1] - 30, self.window_size[0] - 100
@@ -190,15 +185,25 @@ class Board(object):
                             self.game.state == GameStateEnum.CONTINUE
                             and self.game.lock.acquire(block=False)
                         ):
-                            self.target_agent.input_queue.put(pos)
-                            self.game.lock.release()
-                            success = self.draw_stone(pos)
-                            if success:
-                                self.game.lock.acquire()
-                                if self.game.state != GameStateEnum.CONTINUE:
-                                    self.show_message(f'Game Finished : {self.game.state.value}')
+                            point = self.get_point(pos)
+                            if (
+                                point is None 
+                                or (
+                                    self.target_agent.turn == TurnStateEnum.BLACK
+                                    and point in self.game.rule.forbidden_points
+                                    )
+                                ):
                                 self.game.lock.release()
-                                self.change_agent()
+                                continue
+                            self.target_agent.input_queue.put(point)
+                            self.game.lock.release()
+                            self.draw_stone(point)
+
+                            self.game.lock.acquire()
+                            if self.game.state != GameStateEnum.CONTINUE:
+                                self.show_message(f'Game Finished : {self.game.state.value}')
+                            self.game.lock.release()
+                            self.change_agent()
                     elif self.new_menu.collidepoint(pos):
                         self.restart()
                     # elif self.show_rect.collidepoint(pos):

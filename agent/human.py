@@ -17,8 +17,4 @@ class HumanAgent(BaseAgent):
 
     def move(self, board):
         row, col = self.input_queue.get()
-        if self.turn == TurnStateEnum.BLACK:
-            while board[row][col] == PointStateEnum.FORBIDDEN:
-                time.sleep(0.1)
-                row, col = self.input_queue.get()
         return (row, col)
