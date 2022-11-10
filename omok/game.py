@@ -4,7 +4,6 @@ from omok.enums import GameMode, PointStateEnum, TurnStateEnum, GameStateEnum
 from omok.exc import (
     OutOfIndexError,
     CanNotSelectError,
-    TestEndError,
 )
 from omok.config import BOARD_SIZE
 from omok.rule import Rule
@@ -108,9 +107,5 @@ class Game(object):
                         return
                     self.change_turn()
                     self.rule.set_forbidden_points(row, col)
-                    print(self.rule.forbidden_points)
-
             except KeyboardInterrupt:
-                break
-            except TestEndError:
                 break
